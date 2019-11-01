@@ -1,7 +1,8 @@
-
+//signature for a generic String code
+sig StringCode{}
 
 abstract sig User {
-	password: one String
+	password: one StringCode,
 }
 
 sig EndUser extends User{
@@ -16,7 +17,7 @@ sig AuthorityUser extends User{
 sig SystemManager extends User{}
 
 abstract sig ID{
-	code: one Int
+	code: one StringCode
 }
 
 sig FiscalCode extends ID{}
@@ -38,7 +39,7 @@ sig LicensePlate{
 }
 
 sig Owner{
-	vehicle: one Vehicle
+	vehicle: some Vehicle
 }
 
 sig Vehicle{
@@ -50,7 +51,7 @@ sig Report{
 	location: one Location,
 	photo: one Photo,
 	vehicles: some Vehicle,
-	offenders: some Owner,
+	offender: some Owner,
 	ticket: lone Ticket
 }
 
@@ -59,5 +60,48 @@ sig Ticket{
 	givenTo: set Owner
 }
 
-pred show{} 
+//No different users have the same ID
+fact uniqueID{
+	no disj user1, user2: EndUser | user1.id = user2.id
+	no disj user1, user2: AuthorityUser | user1.id = user2.id
+}
+
+//no different vehicles have the same License Plate
+//no different License Plates have the same vehicle
+//if a vehicle has a license plate, the license plate is registered with that vehicle
+fact uniqueLicensePlate{
+	no disj v1, v2: Vehicle | v1.licensePlate = v2.licensePlate
+	no disj l1, l2: LicensePlate | l1.vehicle = l2.vehicle
+	all v1 : Vehicle, l1: LicensePlate |  ((l1 = v1.licensePlate) <=> (l1.vehicle = v1))
+}
+
+//if a report has a photo, that photo has that report as report
+//all the vehicles of the report are the same of the photo
+fact consistencyPhotoAndReport{
+	all p1 : Photo, r1: Report |  ((p1 = r1.photo) <=> (r1 = p1.report))
+	all p1: Photo, r1: Report | 
+		(r1.photo = p1) => some v1, v2: Vehicle |
+							((v1 = p1.vehicle && v2 = r1.vehicle) => (v1 = v2))
+}
+
+//different owners can't have the same vehicle
+fact uniqueOwner{
+	no disj o1, o2: Owner | o1.vehicle = o2.vehicle
+}
+
+//different End Users can't generate the same report
+fact uniqueAuthorReport{
+	no disj e1, e2: EndUser | e1.issuedReport = e2.issuedReport
+}
+
+//ticket mus be given to an offender of the Report
+fact consistencyTicketOffenderReport{
+	all o1 : Owner, t1:Ticket, r1: Report | (o1 = t1.givenTo) => (t1=r1.ticket => (some o2: Owner | (o2 in r1.offender) && (o2 = o1)))
+}
+
+pred show{
+#givenTo = 1
+#Report = 1
+#Ticket = 2
+} 
 run show for 10
