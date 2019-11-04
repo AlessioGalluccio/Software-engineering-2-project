@@ -67,7 +67,7 @@ sig Ticket{
 //No different users have the same ID
 fact uniqueID{
 	no disj user1, user2: EndUser | user1.id = user2.id
-	no disj user1, user2: AuthorityUser + SystemManager | user1.id = user2.id
+	no disj user1, user2: AuthorityUser | user1.id = user2.id
 	no disj id1, id2: ID | id1.code = id2.code
 }
 
@@ -85,6 +85,10 @@ fact uniqueLicensePlate{
 fact consistencyPhotoAndReport{
 	all p1 : Photo, r1: Report |  ((p1 = r1.photo) <=> (r1 = p1.report))
 	all p1: Photo, r1: Report | (p1 = r1.photo) implies (p1.containsVehicles = r1.vehicles)
+
+//	all p1: Photo, r1: Report | 
+//		(r1.photo = p1) => some v1, v2: Vehicle |
+//							((v1 = p1.vehicle && v2 = r1.vehicle) => (v1 = v2))
 }
 
 //different owners can't have the same vehicle
@@ -98,36 +102,15 @@ fact uniqueAuthorReport{
 }
 
 //ticket must be given to an offender of the Report
-fact consistencyTicketReport{
+fact consistencyTicketOffenderReport{
+//	all o1 : Owner, t1:Ticket, r1: Report | ((o1 in t1.givenTo) and (t1=r1.ticket))
+//												 => (some o2: Owner | (o2 in r1.offender) && (o2 = o1))
 	all t1:Ticket| some r1: Report | (r1.ticket = t1) implies (t1.givenTo in r1.offender)
 	
 }
 
-//Two reports can't have the same ticket
-fact twoReportsCantHaveSameTicket{
-	no disj r1,r2 : Report | r1.ticket = r2.ticket
-}
 
-
-//No ticket must be generated if they are not given to someone
-pred noTicketHasNoOffender{
-	no t1: Ticket | #(t1.givenTo) = 0
-	#Ticket > 0
-	#givenTo > 0
+pred show{
+no t1: Ticket | #(t1.givenTo) = 0
 } 
-//run noTicketHasNoOffender for 3
-
-//there can be a situation where there are reports,
-//but the Authority users haven't still generated the tickets
-pred ticketsNotAlreadyGenerated{
-	#Ticket = 0
-	#offender > 0
-}
-//run ticketsNotAlreadyGenerated for 3
-
-//if there are not specified any vehicles, a report can't be made
-pred noReportIfNoVehicle{
-	#(Report.vehicle) = 0 implies #Report = 0
-}
-run noReportIfNoVehicle for 3
-
+run show for 5
