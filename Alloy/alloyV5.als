@@ -43,12 +43,6 @@ sig Photo{
 	containsVehicles: set Vehicle
 }
 
-sig Time{
-	timestamp: one Int
-}{
-	timestamp >= 0
-}
-
 // License Plate of a vehicle
 sig LicensePlate{
 	vehicle: one Vehicle
@@ -70,8 +64,7 @@ sig Report{
 	photo: one Photo,
 	vehicles: some Vehicle,
 	offender: some Owner,
-	ticket: lone TicketList,
-	time: one Time
+	ticket: one TicketList
 }
 
 // Set of Tickets generated for a Report
@@ -83,7 +76,7 @@ sig TicketList{
 }
 
 
-// No different users have the same ID
+//No different users have the same ID
 fact uniqueID{
 	no disj user1, user2: EndUser | user1.id = user2.id
 	no disj user1, user2: AuthorityUser + SystemManager | user1.id = user2.id
@@ -116,7 +109,6 @@ fact uniqueAuthorReport{
 	no disj e1, e2: EndUser | e1.issuedReport = e2.issuedReport
 }
 
-
 // Ticket must be given to an Offender of a Report
 fact consistencyTicketReport{
 	all t1: TicketList | (some r1: Report | (r1.ticket in t1) implies (t1.givenTo in r1.offender)) 
@@ -125,13 +117,6 @@ fact consistencyTicketReport{
 // Two Reports can't have the same TicketList
 fact twoReportsCantHaveSameTicket{
 	no disj r1,r2 : Report | r1.ticket = r2.ticket
-}
-
-// There can't be Time, Location or Photo without a Report
-fact allTimeLocationPhotoHaveReport{
-	all t1: Time | (some r1: Report | r1.time = t1)
-	all l1: Location | (some r1: Report | r1.location = l1)
-	all p1: Photo | (some r1: Report | r1.photo = p1)
 }
 
 
@@ -150,10 +135,8 @@ pred ticketsNotAlreadyGenerated{
 }
 run ticketsNotAlreadyGenerated for 3
 
-
 // If no Vehicles are specified by the End User, a Report can't be made
 pred noReportIfNoVehicle{
 	#(Report.vehicle) = 0 implies #Report = 0
 }
 run noReportIfNoVehicle for 3
-
