@@ -47,7 +47,6 @@ sig Vehicle{
 	owner: one Owner
 }
 
-
 sig Report{
 	location: one Location,
 	photo: one Photo,
@@ -59,16 +58,12 @@ sig Report{
 sig Ticket{
 	givenBy: one AuthorityUser,
 	givenTo: set Owner
-}{
-	#givenTo >= 1
 }
-
 
 //No different users have the same ID
 fact uniqueID{
 	no disj user1, user2: EndUser | user1.id = user2.id
 	no disj user1, user2: AuthorityUser | user1.id = user2.id
-	no disj id1, id2: ID | id1.code = id2.code
 }
 
 //no different vehicles have the same License Plate
@@ -84,11 +79,9 @@ fact uniqueLicensePlate{
 //all the vehicles of the report are the same of the photo
 fact consistencyPhotoAndReport{
 	all p1 : Photo, r1: Report |  ((p1 = r1.photo) <=> (r1 = p1.report))
-	all p1: Photo, r1: Report | (p1 = r1.photo) implies (p1.containsVehicles = r1.vehicles)
-
-//	all p1: Photo, r1: Report | 
-//		(r1.photo = p1) => some v1, v2: Vehicle |
-//							((v1 = p1.vehicle && v2 = r1.vehicle) => (v1 = v2))
+	all p1: Photo, r1: Report | 
+		(r1.photo = p1) => some v1, v2: Vehicle |
+							((v1 = p1.vehicle && v2 = r1.vehicle) => (v1 = v2))
 }
 
 //different owners can't have the same vehicle
@@ -101,16 +94,14 @@ fact uniqueAuthorReport{
 	no disj e1, e2: EndUser | e1.issuedReport = e2.issuedReport
 }
 
-//ticket must be given to an offender of the Report
+//ticket mus be given to an offender of the Report
 fact consistencyTicketOffenderReport{
-//	all o1 : Owner, t1:Ticket, r1: Report | ((o1 in t1.givenTo) and (t1=r1.ticket))
-//												 => (some o2: Owner | (o2 in r1.offender) && (o2 = o1))
-	all t1:Ticket| some r1: Report | (r1.ticket = t1) implies (t1.givenTo in r1.offender)
-	
+	all o1 : Owner, t1:Ticket, r1: Report | (o1 = t1.givenTo) => (t1=r1.ticket => (some o2: Owner | (o2 in r1.offender) && (o2 = o1)))
 }
 
-
 pred show{
-no t1: Ticket | #(t1.givenTo) = 0
+#givenTo = 1
+#Report = 1
+#Ticket = 2
 } 
-run show for 5
+run show for 10
