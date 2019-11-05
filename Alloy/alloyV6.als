@@ -43,7 +43,6 @@ sig Photo{
 	containsVehicles: set Vehicle
 }
 
-//Time registered when the End User makes the Photo for the Report. For simplicity, we use Int for the timestamp
 sig Time{
 	timestamp: one Int
 }{
@@ -65,7 +64,7 @@ sig Vehicle{
 	owner: one Owner
 }
 
-//Report made by the End User and sent to the system
+
 sig Report{
 	location: one Location,
 	photo: one Photo,
@@ -142,7 +141,7 @@ pred noTicketHasNoOffender{
 	#TicketList > 0
 	#givenTo > 0
 } 
-run noTicketHasNoOffender for 2
+run noTicketHasNoOffender for 3
 
 // There can be a situation where there are Reports, but the Authority users haven't still generated the Tickets
 pred ticketsNotAlreadyGenerated{
@@ -152,8 +151,9 @@ pred ticketsNotAlreadyGenerated{
 run ticketsNotAlreadyGenerated for 3
 
 
-// If no Vehicles are specified by the End User in the Photo, a Report can't be made
-pred noReportIfNoVehicleInPhoto{
-	#(Photo.vehicle) = 0 implies #Report = 0
+// If no Vehicles are specified by the End User, a Report can't be made
+pred noReportIfNoVehicle{
+	#(Report.vehicle) = 0 implies #Report = 0
 }
-run noReportIfNoVehicleInPhoto for 4
+run noReportIfNoVehicle for 3
+
