@@ -154,24 +154,6 @@ run ticketsNotAlreadyGenerated for 3
 
 // If no Vehicles are specified by the End User in the Photo, a Report can't be made
 pred noReportIfNoVehicleInPhoto{
-	#(Photo.containsVehicles) = 0 implies #Report = 0
+	#(Photo.vehicle) = 0 implies #Report = 0
 }
-run noReportIfNoVehicleInPhoto for 2
-
-
-// COUNTEREXAMPLES
-/*
-pred someTicketHasNoOffender{
-	some t1: TicketList | #(t1.givenTo) = 0
-	#TicketList > 0
-	#givenTo > 0
-}
-run someTicketHasNoOffender for 2
-
-
-pred someReportIfNoVehicleInPhoto{
-	#(Photo.containsVehicles) = 0
-	#Report = 1
-}
-run someReportIfNoVehicleInPhoto for 4
-*/
+run noReportIfNoVehicleInPhoto for 4
